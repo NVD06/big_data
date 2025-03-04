@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  jupyter:
+    image: jupyter/pyspark-notebook:latest
+    container_name: jupyter_notebook
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./jupyter_code:/home/jovyan/code  # Mount local folder for Jupyter code
+    networks:
+      - spark_network
+
+  spark-master:
+    image: bitnami/spark:3.5.0
+    container_name: spark_master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_MASTER_PORT=7070
+    ports:
+      - "7070:7070"
+      - "8080:8080"
+    networks:
+      - spark_network
+
+  spark-worker-1:
+    image: bitnami/spark:3.5.0
+    container_name: spark_worker_1
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7070
+    depends_on:
+      - spark-master
+    networks:
+      - spark_network
+
+  spark-worker-2:
+    image: bitnami/spark:3.5.0
+    container_name: spark_worker_2
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7070
+    depends_on:
+      - spark-master
+    networks:
+      - spark_network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - spark_network
+
+networks:
+  spark_network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

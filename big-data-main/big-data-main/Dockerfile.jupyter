@@ -1,0 +1,5 @@
+FROM jupyter/pyspark-notebook:latest
+
+# Cài đặt các thư viện cần thiết
+RUN pip install kafka-python pymongo nltk scikit-learn pandas && \
+    python -m nltk.downloader -d /home/jovyan/nltk_data punkt
